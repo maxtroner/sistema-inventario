@@ -47,7 +47,6 @@ header {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  -webkit-app-region: drag;
 }
 
 header h1 {
