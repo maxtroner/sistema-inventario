@@ -15,25 +15,29 @@ db.exec(`
     name TEXT NOT NULL,
     image_path TEXT,
     quantity INTEGER NOT NULL DEFAULT 0,
+    unidad TEXT DEFAULT '',
+    familia TEXT DEFAULT '',
+    minima INTEGER NOT NULL DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
 
+try { db.exec("ALTER TABLE products ADD COLUMN unidad TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE products ADD COLUMN familia TEXT DEFAULT ''"); } catch (e) {}
+try { db.exec("ALTER TABLE products ADD COLUMN minima INTEGER DEFAULT 0"); } catch (e) {}
+
 const insertStmt = db.prepare(
-  'INSERT INTO products (code, name, image_path, quantity) VALUES (?, ?, ?, ?)'
+  'INSERT INTO products (code, name, image_path, quantity, unidad, familia, minima) VALUES (?, ?, ?, ?, ?, ?, ?)'
 );
 
 const updateStmt = db.prepare(
-  'UPDATE products SET code = ?, name = ?, image_path = ?, quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+  'UPDATE products SET code = ?, name = ?, image_path = ?, quantity = ?, unidad = ?, familia = ?, minima = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
 );
 
 const deleteStmt = db.prepare('DELETE FROM products WHERE id = ?');
-
 const subtractStmt = db.prepare('UPDATE products SET quantity = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
-
 const getAllStmt = db.prepare('SELECT * FROM products ORDER BY code ASC');
-
 const getByIdStmt = db.prepare('SELECT * FROM products WHERE id = ?');
 
 module.exports = {
@@ -41,14 +45,14 @@ module.exports = {
     return getAllStmt.all();
   },
 
-  addProduct({ code, name, image_path, quantity }) {
-    const result = insertStmt.run(code, name, image_path || null, quantity || 0);
-    return { id: Number(result.lastInsertRowid), code, name, image_path, quantity: quantity || 0 };
+  addProduct({ code, name, image_path, quantity, unidad, familia, minima }) {
+    const result = insertStmt.run(code, name, image_path || null, quantity || 0, unidad || '', familia || '', minima || 0);
+    return { id: Number(result.lastInsertRowid), code, name, image_path, quantity: quantity || 0, unidad: unidad || '', familia: familia || '', minima: minima || 0 };
   },
 
-  updateProduct({ id, code, name, image_path, quantity }) {
-    updateStmt.run(code, name, image_path, quantity, id);
-    return { id, code, name, image_path, quantity };
+  updateProduct({ id, code, name, image_path, quantity, unidad, familia, minima }) {
+    updateStmt.run(code, name, image_path, quantity, unidad || '', familia || '', minima || 0, id);
+    return { id, code, name, image_path, quantity, unidad: unidad || '', familia: familia || '', minima: minima || 0 };
   },
 
   deleteProduct(id) {

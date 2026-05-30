@@ -5,92 +5,139 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data: atom:; script-src 'self'; style-src 'self' 'unsafe-inline';">
   <title>Sistema de Inventario</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <div class="app-container">
-    <header>
-      <h1>Sistema de Inventario</h1>
-      <div class="header-actions">
-        <button class="btn btn-secondary" id="btnExportPdf">📄 Exportar PDF</button>
-        <button class="btn btn-secondary" id="btnCheckUpdates">🔄 Buscar actualizaciones</button>
-        <button class="btn btn-primary" id="btnAddProduct">+ Nuevo Producto</button>
-        <div class="search-box">
-          <input type="text" id="searchInput" placeholder="Buscar por código o nombre...">
-        </div>
-      </div>
-    </header>
+<body class="bg-gray-900 text-white font-sans overflow-hidden h-screen" style="font-family: 'Inter', 'Segoe UI', sans-serif;">
 
-    <div class="table-container">
-      <table>
+<div class="flex flex-col h-screen">
+
+  <!-- Header -->
+  <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between gap-4 select-none">
+    <h1 class="text-xl font-bold text-white tracking-tight whitespace-nowrap">Sistema de Inventario</h1>
+
+    <div class="relative flex-1 max-w-md">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Buscar artículos..." class="w-full bg-gray-700/60 text-gray-200 placeholder-gray-500 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+    </div>
+
+    <div class="flex items-center gap-3">
+      <button id="btnExportPdf" class="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium rounded-lg transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar PDF
+      </button>
+      <button id="btnCheckUpdates" class="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium rounded-lg transition-colors">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      </button>
+      <button id="btnAddProduct" class="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-blue-600/20">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar Producto
+      </button>
+    </div>
+  </header>
+
+  <!-- Update Banner -->
+  <div id="updateBanner" class="hidden flex items-center gap-3 px-6 py-2 bg-blue-600 text-white text-sm">
+    <span id="updateMessage">Nueva versión disponible</span>
+    <button id="btnDownloadUpdate" class="px-3 py-1 bg-white text-blue-700 text-xs font-semibold rounded">Descargar</button>
+    <button id="btnDismissUpdate" class="ml-auto text-white/80 hover:text-white text-lg leading-none">&times;</button>
+  </div>
+
+  <!-- Update Progress -->
+  <div id="updateProgress" class="hidden flex items-center gap-3 px-6 py-2 bg-gray-700 text-gray-200 text-sm">
+    <span>Descargando actualización...</span>
+    <div class="flex-1 h-1.5 bg-gray-600 rounded-full overflow-hidden">
+      <div id="progressFill" class="h-full bg-blue-500 rounded-full transition-all" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="flex-1 overflow-auto px-6 py-4">
+    <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-xl">
+      <table class="w-full">
         <thead>
-          <tr>
-            <th style="width:60px">Código</th>
-            <th style="width:200px">Nombre</th>
-            <th style="width:100px">Imagen</th>
-            <th style="width:100px">Cantidad Actual</th>
-            <th style="width:200px">Restar Cantidad</th>
-            <th style="width:100px">Acciones</th>
+          <tr class="bg-blue-600 text-white text-xs font-semibold uppercase tracking-wider">
+            <th class="w-10 px-3 py-3 text-center">#</th>
+            <th class="px-3 py-3 text-left">Código <svg class="inline align-middle ml-1 opacity-60" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
+            <th class="px-3 py-3 text-left">Artículo <svg class="inline align-middle ml-1 opacity-60" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
+            <th class="w-20 px-3 py-3 text-left">Unidad <svg class="inline align-middle ml-1 opacity-60" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
+            <th class="px-3 py-3 text-left">Familia / Periodo <svg class="inline align-middle ml-1 opacity-60" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
+            <th class="w-20 px-3 py-3 text-center">E. Mínima</th>
+            <th class="w-20 px-3 py-3 text-center">Stock</th>
+            <th class="w-28 px-3 py-3 text-center">Solicitar</th>
+            <th class="w-16 px-3 py-3 text-center">Acciones</th>
           </tr>
         </thead>
-        <tbody id="productsBody">
-        </tbody>
+        <tbody id="productsBody" class="text-sm"></tbody>
       </table>
     </div>
   </div>
+</div>
 
-  <div class="update-banner" id="updateBanner" style="display:none">
-    <span id="updateMessage">📥 Nueva versión disponible</span>
-    <button class="btn btn-primary" id="btnDownloadUpdate" style="padding:4px 12px;font-size:12px">Descargar</button>
-    <button class="btn-close" id="btnDismissUpdate" style="font-size:18px">&times;</button>
-  </div>
-
-  <div class="update-progress" id="updateProgress" style="display:none">
-    <span>Descargando actualización...</span>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-  </div>
-
-  <div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-      <div class="modal-header">
-        <h2 id="modalTitle">Nuevo Producto</h2>
-        <button class="btn-close" id="btnCloseModal">&times;</button>
+<!-- Modal -->
+<div id="modalOverlay" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center">
+  <div class="bg-gray-800 rounded-xl border border-gray-700 w-full max-w-lg mx-4 shadow-2xl">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+      <h2 id="modalTitle" class="text-lg font-semibold text-white">Nuevo Producto</h2>
+      <button id="btnCloseModal" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div class="p-6 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Código</label>
+          <input type="text" id="editCode" placeholder="Ej: PROD-001" class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Unidad</label>
+          <input type="text" id="editUnidad" placeholder="Ej: pza, kg, m" class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+        </div>
       </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label for="editCode">Código del Producto</label>
-          <input type="text" id="editCode" placeholder="Ej: PROD-001">
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Artículo</label>
+        <input type="text" id="editName" placeholder="Nombre del producto" class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Familia / Periodo</label>
+        <input type="text" id="editFamilia" placeholder="Ej: Electrónica, Mensual" class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Stock Actual</label>
+          <input type="number" id="editQuantity" min="0" value="0" class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
         </div>
-        <div class="form-group">
-          <label for="editName">Nombre del Producto</label>
-          <input type="text" id="editName" placeholder="Ej: Laptop HP">
+        <div>
+          <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Existencia Mínima</label>
+          <input type="number" id="editMinima" min="0" value="0" class="w-full bg-gray-700 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
         </div>
-        <div class="form-group">
-          <label>Imagen del Producto</label>
-          <div class="image-upload-area" id="imageUploadArea">
-            <img id="imagePreview" style="display:none">
-            <div class="image-placeholder" id="imagePlaceholder">
-              <span>+</span>
-              <p>Haz clic para seleccionar imagen</p>
-            </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-400 mb-1.5 uppercase tracking-wider">Imagen</label>
+        <div id="imageUploadArea" class="bg-gray-700 border-2 border-dashed border-gray-600 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition-colors">
+          <img id="imagePreview" class="hidden mx-auto max-h-32 mb-2 rounded">
+          <div id="imagePlaceholder" class="text-gray-400">
+            <svg class="mx-auto mb-1" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <p class="text-xs">Haz clic para seleccionar imagen</p>
           </div>
         </div>
-        <div class="form-group">
-          <label for="editQuantity">Cantidad Actual</label>
-          <input type="number" id="editQuantity" min="0" value="0" placeholder="0">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnCancelModal">Cancelar</button>
-        <button class="btn btn-primary" id="btnSaveProduct">Guardar</button>
       </div>
     </div>
+    <div class="flex justify-end gap-3 px-6 py-4 border-t border-gray-700">
+      <button id="btnCancelModal" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 text-sm font-medium rounded-lg transition-colors">Cancelar</button>
+      <button id="btnSaveProduct" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg transition-colors">Guardar</button>
+    </div>
   </div>
+</div>
 
-  <div class="img-tooltip" id="imgTooltip">
-    <img id="tooltipImage" src="" alt="Vista previa">
-  </div>
+<!-- Image Tooltip -->
+<div id="imgTooltip" class="hidden fixed z-40 bg-gray-800 border border-gray-600 rounded-lg shadow-2xl overflow-hidden" style="max-width:200px;max-height:200px">
+  <img id="tooltipImage" src="" alt="" class="w-full h-full object-contain">
+</div>
 
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

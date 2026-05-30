@@ -8,7 +8,10 @@ const modalOverlay = document.getElementById('modalOverlay');
 const modalTitle = document.getElementById('modalTitle');
 const editCode = document.getElementById('editCode');
 const editName = document.getElementById('editName');
+const editUnidad = document.getElementById('editUnidad');
+const editFamilia = document.getElementById('editFamilia');
 const editQuantity = document.getElementById('editQuantity');
+const editMinima = document.getElementById('editMinima');
 const imagePreview = document.getElementById('imagePreview');
 const imagePlaceholder = document.getElementById('imagePlaceholder');
 const imageUploadArea = document.getElementById('imageUploadArea');
@@ -32,10 +35,10 @@ function renderTable() {
   if (filtered.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6">
+        <td colspan="9" class="px-6 py-12">
           <div class="empty-state">
-            <p>${products.length === 0 ? 'No hay productos registrados' : 'No se encontraron resultados'}</p>
-            <p class="sub">${products.length === 0 ? 'Haz clic en "+ Nuevo Producto" para comenzar' : 'Prueba con otros términos de búsqueda'}</p>
+            <p>${products.length === 0 ? 'No hay artículos registrados' : 'Sin resultados'}</p>
+            <p class="sub">${products.length === 0 ? 'Haz clic en "Agregar Producto" para comenzar' : 'Prueba con otros términos'}</p>
           </div>
         </td>
       </tr>
@@ -43,51 +46,62 @@ function renderTable() {
     return;
   }
 
-  tbody.innerHTML = filtered.map(p => `
+  tbody.innerHTML = filtered.map((p, i) => {
+    const stockOk = p.quantity > p.minima;
+    const requestText = stockOk ? 'SUFICIENTE' : 'SOLICITAR';
+    return `
     <tr data-id="${p.id}">
-      <td class="cell-code">
-        <span class="cell-text" data-field="code">${escapeHtml(p.code)}</span>
-      </td>
+      <td class="w-10 text-center"><span class="row-number">${i + 1}</span></td>
+      <td><span class="cell-text text-gray-300" data-field="code">${escapeHtml(p.code)}</span></td>
       <td class="name-cell">
-        <span class="cell-text name-text" data-field="name" data-image="${escapeHtml(p.image_path || '')}">${escapeHtml(p.name)}</span>
-      </td>
-      <td>
-        <div class="image-cell">
-          ${p.image_path
-            ? `<img class="product-image" image-path="${escapeHtml(p.image_path)}">`
-            : `<span style="color:#999;font-size:11px;">Sin imagen</span>`
-          }
-          <button class="btn-icon" onclick="uploadImage(${p.id})" title="Cambiar imagen">🖼</button>
+        <span class="cell-text text-gray-100 font-medium name-text" data-field="name" data-image="${escapeHtml(p.image_path || '')}">${escapeHtml(p.name)}</span>
+        <div class="flex gap-1 mt-1">
+          <button class="btn-action" onclick="subtractProduct(${p.id}, this)" title="Restar stock">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          ${p.image_path ? `<button class="btn-action" onclick="uploadImage(${p.id})" title="Cambiar imagen">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </button>` : ''}
         </div>
       </td>
-      <td>
-        <span class="cell-text" data-field="quantity">${p.quantity}</span>
-      </td>
-      <td>
-        <div class="qty-control">
-          <input type="number" class="subtract-input" placeholder="0" min="0" value="" step="1">
-          <button class="btn btn-danger" onclick="subtractProduct(${p.id}, this)">Restar</button>
-        </div>
+      <td><span class="cell-text text-gray-300" data-field="unidad">${escapeHtml(p.unidad || '')}</span></td>
+      <td><span class="cell-text text-gray-300" data-field="familia">${escapeHtml(p.familia || '')}</span></td>
+      <td class="text-center"><span class="cell-text text-gray-300 font-medium" data-field="minima">${p.minima}</span></td>
+      <td class="text-center"><span class="cell-text ${p.quantity >= 0 ? 'stock-ok' : 'stock-low'}" data-field="quantity">${p.quantity}</span></td>
+      <td class="text-center">
+        <span class="${stockOk ? 'request-ok' : 'request-low'}">${requestText}</span>
       </td>
       <td>
         <div class="actions-cell">
-          <button class="btn-icon" onclick="editProduct(${p.id})" title="Editar">✏️</button>
-          <button class="btn-icon danger" onclick="deleteProduct(${p.id})" title="Eliminar">🗑</button>
+          <button class="btn-action edit" onclick="openEditModal(${p.id})" title="Editar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-action" onclick="deleteProduct(${p.id})" title="Eliminar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          </button>
         </div>
       </td>
     </tr>
-  `).join('');
+    `;
+  }).join('');
 
   resolveImages();
 }
 
 async function resolveImages() {
-  const imgs = document.querySelectorAll('.product-image[image-path]');
-  for (const img of imgs) {
-    const relPath = img.getAttribute('image-path');
-    const fullPath = await window.electronAPI.resolveImagePath(relPath);
-    img.src = `file:///${fullPath}`;
+  const imgs = document.querySelectorAll('.name-text[data-image]');
+  for (const el of imgs) {
+    const relPath = el.dataset.image;
+    if (relPath) {
+      const fullPath = await window.electronAPI.resolveImagePath(relPath);
+      el.dataset.fullpath = fullPath;
+    }
   }
+}
+
+function getProductFromRow(tr) {
+  const id = parseInt(tr.dataset.id);
+  return products.find(p => p.id === id);
 }
 
 tbody.addEventListener('dblclick', (e) => {
@@ -95,12 +109,11 @@ tbody.addEventListener('dblclick', (e) => {
   if (!span) return;
   const field = span.dataset.field;
   const tr = span.closest('tr');
-  const id = parseInt(tr.dataset.id);
-  const product = products.find(p => p.id === id);
+  const product = getProductFromRow(tr);
   if (!product) return;
 
   const currentValue = product[field];
-  const isNumber = field === 'quantity';
+  const isNumber = field === 'quantity' || field === 'minima';
 
   const input = document.createElement('input');
   input.type = isNumber ? 'number' : 'text';
@@ -113,7 +126,7 @@ tbody.addEventListener('dblclick', (e) => {
     const newValue = isNumber ? (parseInt(input.value) || 0) : input.value;
     if (String(newValue) === String(currentValue)) {
       const span2 = document.createElement('span');
-      span2.className = `cell-text${field === 'name' ? ' name-text' : ''}`;
+      span2.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
       span2.dataset.field = field;
       if (field === 'name') span2.dataset.image = product.image_path || '';
       span2.textContent = currentValue;
@@ -125,15 +138,15 @@ tbody.addEventListener('dblclick', (e) => {
     window.electronAPI.updateProduct(updated).then(() => {
       product[field] = newValue;
       const span2 = document.createElement('span');
-      span2.className = `cell-text${field === 'name' ? ' name-text' : ''}`;
+      span2.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
       span2.dataset.field = field;
       if (field === 'name') span2.dataset.image = product.image_path || '';
       span2.textContent = newValue;
       input.replaceWith(span2);
-      showToast('Producto actualizado');
+      renderTable();
     }).catch(() => {
       const span2 = document.createElement('span');
-      span2.className = `cell-text${field === 'name' ? ' name-text' : ''}`;
+      span2.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
       span2.dataset.field = field;
       if (field === 'name') span2.dataset.image = product.image_path || '';
       span2.textContent = currentValue;
@@ -148,11 +161,11 @@ tbody.addEventListener('dblclick', (e) => {
 
   input.addEventListener('blur', onFinish);
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { input.blur(); }
+    if (e.key === 'Enter') input.blur();
     if (e.key === 'Escape') {
       input.removeEventListener('blur', onFinish);
       const span2 = document.createElement('span');
-      span2.className = `cell-text${field === 'name' ? ' name-text' : ''}`;
+      span2.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
       span2.dataset.field = field;
       if (field === 'name') span2.dataset.image = product.image_path || '';
       span2.textContent = currentValue;
@@ -170,7 +183,7 @@ tbody.addEventListener('mouseenter', (e) => {
 
 tbody.addEventListener('mousemove', (e) => {
   const span = e.target.closest('.name-text[data-image]');
-  if (!span || !span.dataset.image || !imgTooltip.classList.contains('visible')) return;
+  if (!span || !span.dataset.image || imgTooltip.classList.contains('hidden')) return;
   positionTooltip(e.target);
 });
 
@@ -184,9 +197,10 @@ tbody.addEventListener('mouseleave', (e) => {
 
 async function showTooltip(span, imagePath) {
   if (imagePath) {
-    const fullPath = await window.electronAPI.resolveImagePath(imagePath);
+    const fullPath = span.dataset.fullpath || await window.electronAPI.resolveImagePath(imagePath);
+    span.dataset.fullpath = fullPath;
     tooltipImage.src = `file:///${fullPath}`;
-    imgTooltip.classList.add('visible');
+    imgTooltip.classList.remove('hidden');
     positionTooltip(span);
   }
 }
@@ -204,11 +218,11 @@ function positionTooltip(el) {
 function hideTooltip() {
   clearTimeout(tooltipHideTimeout);
   tooltipHideTimeout = setTimeout(() => {
-    imgTooltip.classList.remove('visible');
+    imgTooltip.classList.add('hidden');
   }, 200);
 }
 
-function editProduct(id) {
+function openEditModal(id) {
   const product = products.find(p => p.id === id);
   if (product) openModal(product);
 }
@@ -225,46 +239,73 @@ async function uploadImage(id) {
     product.image_path = relativePath;
     renderTable();
     showToast('Imagen actualizada');
-  } catch (err) {
+  } catch {
     showToast('Error al actualizar imagen', true);
   }
 }
 
 async function subtractProduct(id, btn) {
   const tr = btn.closest('tr');
-  const input = tr.querySelector('.subtract-input');
-  const qty = parseInt(input.value);
-  if (!qty || qty <= 0) {
-    showToast('Ingresa una cantidad válida para restar', true);
-    return;
-  }
-
-  const product = products.find(p => p.id === id);
+  const product = getProductFromRow(tr);
   if (!product) return;
-  if (qty > product.quantity) {
-    showToast(`No hay suficiente stock. Actual: ${product.quantity}`, true);
-    return;
-  }
 
-  try {
-    const result = await window.electronAPI.subtractQuantity(id, qty);
-    product.quantity = result.quantity;
-    input.value = '';
-    renderTable();
-    showToast(`Restados ${qty} unidades. Stock actual: ${result.quantity}`);
-  } catch (err) {
-    showToast('Error al restar cantidad', true);
-  }
+  const qtyInput = document.createElement('input');
+  qtyInput.type = 'number';
+  qtyInput.min = 0;
+  qtyInput.value = '';
+  qtyInput.placeholder = '0';
+  qtyInput.className = 'subtract-input';
+  qtyInput.style.width = '60px';
+
+  const confirmBtn = document.createElement('button');
+  confirmBtn.textContent = 'Restar';
+  confirmBtn.className = 'px-2 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded transition-colors';
+
+  const parent = btn.parentElement;
+  const origHTML = parent.innerHTML;
+  parent.innerHTML = '';
+  parent.appendChild(qtyInput);
+  parent.appendChild(confirmBtn);
+  qtyInput.focus();
+
+  const doSubtract = async () => {
+    const qty = parseInt(qtyInput.value);
+    if (!qty || qty <= 0) {
+      showToast('Cantidad inválida', true);
+      parent.innerHTML = origHTML;
+      return;
+    }
+    if (qty > product.quantity) {
+      showToast(`Stock insuficiente. Actual: ${product.quantity}`, true);
+      parent.innerHTML = origHTML;
+      return;
+    }
+    try {
+      const result = await window.electronAPI.subtractQuantity(id, qty);
+      product.quantity = result.quantity;
+      renderTable();
+      showToast(`Restados ${qty} uds. Stock: ${result.quantity}`);
+    } catch {
+      showToast('Error al restar', true);
+      parent.innerHTML = origHTML;
+    }
+  };
+
+  confirmBtn.addEventListener('click', doSubtract);
+  qtyInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSubtract();
+    if (e.key === 'Escape') { parent.innerHTML = origHTML; }
+  });
 }
 
 async function deleteProduct(id) {
-  if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+  if (!confirm('¿Eliminar este producto?')) return;
   try {
     await window.electronAPI.deleteProduct(id);
     products = products.filter(p => p.id !== id);
     renderTable();
     showToast('Producto eliminado');
-  } catch (err) {
+  } catch {
     showToast('Error al eliminar', true);
   }
 }
@@ -274,26 +315,29 @@ function openModal(product) {
   modalTitle.textContent = product ? 'Editar Producto' : 'Nuevo Producto';
   editCode.value = product ? product.code : '';
   editName.value = product ? product.name : '';
+  editUnidad.value = product ? (product.unidad || '') : '';
+  editFamilia.value = product ? (product.familia || '') : '';
   editQuantity.value = product ? product.quantity : 0;
+  editMinima.value = product ? (product.minima || 0) : 0;
   selectedImagePath = null;
 
   if (product && product.image_path) {
     window.electronAPI.resolveImagePath(product.image_path).then(fullPath => {
       imagePreview.src = `file:///${fullPath}`;
-      imagePreview.style.display = 'block';
-      imagePlaceholder.style.display = 'none';
+      imagePreview.classList.remove('hidden');
+      imagePlaceholder.classList.add('hidden');
     });
   } else {
-    imagePreview.style.display = 'none';
-    imagePlaceholder.style.display = 'block';
+    imagePreview.classList.add('hidden');
+    imagePlaceholder.classList.remove('hidden');
   }
 
-  modalOverlay.classList.add('active');
+  modalOverlay.classList.remove('hidden');
   editCode.focus();
 }
 
 function closeModal() {
-  modalOverlay.classList.remove('active');
+  modalOverlay.classList.add('hidden');
   editingId = null;
   selectedImagePath = null;
 }
@@ -303,8 +347,8 @@ imageUploadArea.addEventListener('click', async () => {
   if (!result) return;
   selectedImagePath = result;
   imagePreview.src = `file:///${result}`;
-  imagePreview.style.display = 'block';
-  imagePlaceholder.style.display = 'none';
+  imagePreview.classList.remove('hidden');
+  imagePlaceholder.classList.add('hidden');
 });
 
 document.getElementById('btnAddProduct').addEventListener('click', () => openModal(null));
@@ -314,7 +358,10 @@ document.getElementById('btnCancelModal').addEventListener('click', closeModal);
 document.getElementById('btnSaveProduct').addEventListener('click', async () => {
   const code = editCode.value.trim();
   const name = editName.value.trim();
+  const unidad = editUnidad.value.trim();
+  const familia = editFamilia.value.trim();
   const quantity = parseInt(editQuantity.value) || 0;
+  const minima = parseInt(editMinima.value) || 0;
 
   if (!code || !name) {
     showToast('Código y nombre son obligatorios', true);
@@ -332,12 +379,12 @@ document.getElementById('btnSaveProduct').addEventListener('click', async () => 
   try {
     if (editingId) {
       const product = products.find(p => p.id === editingId);
-      const updated = { id: editingId, code, name, image_path: imagePath, quantity };
+      const updated = { id: editingId, code, name, image_path: imagePath, quantity, unidad, familia, minima };
       await window.electronAPI.updateProduct(updated);
       Object.assign(product, updated);
       showToast('Producto actualizado');
     } else {
-      const newProduct = await window.electronAPI.addProduct({ code, name, image_path: imagePath, quantity });
+      const newProduct = await window.electronAPI.addProduct({ code, name, image_path: imagePath, quantity, unidad, familia, minima });
       products.push(newProduct);
       showToast('Producto agregado');
     }
@@ -364,7 +411,6 @@ document.getElementById('btnExportPdf').addEventListener('click', async () => {
     if (saved) showToast('PDF exportado correctamente');
   } catch (err) {
     showToast('Error al exportar PDF', true);
-    console.error(err);
   }
 });
 
@@ -379,16 +425,13 @@ function escapeHtml(text) {
 function showToast(message, isError = false) {
   const existing = document.querySelector('.toast');
   if (existing) existing.remove();
-
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.style.background = isError ? '#d13438' : '#323130';
+  toast.style.background = isError ? '#dc2626' : '#1f2937';
   toast.textContent = message;
   document.body.appendChild(toast);
-
   setTimeout(() => {
     toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.3s';
     setTimeout(() => toast.remove(), 300);
   }, 2500);
 }
@@ -399,30 +442,30 @@ const updateProgress = document.getElementById('updateProgress');
 const progressFill = document.getElementById('progressFill');
 
 window.electronAPI.onUpdateAvailable((info) => {
-  updateMessage.textContent = `📥 Nueva versión ${info.version} disponible`;
-  updateBanner.style.display = 'flex';
+  updateMessage.textContent = `Nueva versión ${info.version} disponible`;
+  updateBanner.classList.remove('hidden');
 });
 
 window.electronAPI.onUpdateProgress((p) => {
-  updateBanner.style.display = 'none';
-  updateProgress.style.display = 'flex';
+  updateBanner.classList.add('hidden');
+  updateProgress.classList.remove('hidden');
   progressFill.style.width = Math.round(p.percent) + '%';
 });
 
 window.electronAPI.onUpdateDownloaded(() => {
-  updateProgress.innerHTML = '<span>✅ Actualización descargada. Reiniciando...</span>';
+  updateProgress.innerHTML = '<span class="text-green-400">Actualización descargada. Reiniciando...</span>';
   setTimeout(() => window.electronAPI.installUpdate(), 1500);
 });
 
 document.getElementById('btnDownloadUpdate').addEventListener('click', () => {
   window.electronAPI.downloadUpdate();
-  updateBanner.style.display = 'none';
-  updateProgress.style.display = 'flex';
+  updateBanner.classList.add('hidden');
+  updateProgress.classList.remove('hidden');
   progressFill.style.width = '0%';
 });
 
 document.getElementById('btnDismissUpdate').addEventListener('click', () => {
-  updateBanner.style.display = 'none';
+  updateBanner.classList.add('hidden');
 });
 
 document.getElementById('btnCheckUpdates').addEventListener('click', async () => {

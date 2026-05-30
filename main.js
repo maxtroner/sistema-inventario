@@ -150,11 +150,11 @@ ipcMain.handle('pdf:generate', async (_, { products, imgDir }) => {
     doc.fontSize(10).font('Helvetica').text(`Generado: ${date}`, { align: 'center' });
     doc.moveDown(1.5);
 
-    const headers = ['Código', 'Nombre', 'Cantidad'];
-    const rows = products.map(p => [p.code, p.name, String(p.quantity)]);
+    const headers = ['Código', 'Artículo', 'Unidad', 'Familia / Periodo', 'E. Mínima', 'Stock'];
+    const rows = products.map(p => [p.code, p.name, p.unidad || '', p.familia || '', String(p.minima), String(p.quantity)]);
 
     const tableTop = doc.y;
-    const colWidths = [100, 250, 100];
+    const colWidths = [90, 200, 70, 130, 70, 70];
     const startX = 30;
 
     doc.fontSize(9).font('Helvetica-Bold');
