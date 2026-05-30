@@ -1,6 +1,6 @@
 {
   "name": "sistema-inventario",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Sistema de Inventario con interfaz tipo Excel",
   "main": "main.js",
   "author": "maxtroner",
@@ -61,6 +61,7 @@
     "electron-builder": "^26.8.1"
   },
   "dependencies": {
-    "electron-updater": "^6.0.0"
+    "electron-updater": "^6.0.0",
+    "pdfkit": "^0.18.0"
   }
 }

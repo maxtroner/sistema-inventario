@@ -12,6 +12,7 @@
     <header>
       <h1>Sistema de Inventario</h1>
       <div class="header-actions">
+        <button class="btn btn-secondary" id="btnExportPdf">📄 Exportar PDF</button>
         <button class="btn btn-primary" id="btnAddProduct">+ Nuevo Producto</button>
         <div class="search-box">
           <input type="text" id="searchInput" placeholder="Buscar por código o nombre...">
@@ -72,6 +73,10 @@
         <button class="btn btn-primary" id="btnSaveProduct">Guardar</button>
       </div>
     </div>
+  </div>
+
+  <div class="img-tooltip" id="imgTooltip">
+    <img id="tooltipImage" src="" alt="Vista previa">
   </div>
 
   <script src="app.js"></script>

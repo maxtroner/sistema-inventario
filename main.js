@@ -117,6 +117,71 @@ ipcMain.handle('image:copyToApp', async (_, sourcePath) => {
   return `products_img/${fileName}`;
 });
 
+ipcMain.handle('dialog:saveFile', async (_, buffer, defaultName) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    defaultPath: defaultName,
+    filters: [{ name: 'PDF', extensions: ['pdf'] }]
+  });
+  if (result.canceled) return false;
+  fs.writeFileSync(result.filePath, Buffer.from(buffer));
+  return true;
+});
+
 ipcMain.handle('image:resolvePath', async (_, relativePath) => {
   return path.join(__dirname, relativePath);
+});
+
+ipcMain.handle('pdf:generate', async (_, { products, imgDir }) => {
+  const PDFDocument = require('pdfkit');
+  const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape' });
+  const chunks = [];
+
+  doc.on('data', (chunk) => chunks.push(chunk));
+
+  return new Promise((resolve, reject) => {
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+
+    const title = 'Reporte de Inventario';
+    const date = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    doc.fontSize(18).font('Helvetica-Bold').text(title, { align: 'center' });
+    doc.fontSize(10).font('Helvetica').text(`Generado: ${date}`, { align: 'center' });
+    doc.moveDown(1.5);
+
+    const headers = ['Código', 'Nombre', 'Cantidad'];
+    const rows = products.map(p => [p.code, p.name, String(p.quantity)]);
+
+    const tableTop = doc.y;
+    const colWidths = [100, 250, 100];
+    const startX = 30;
+
+    doc.fontSize(9).font('Helvetica-Bold');
+    let x = startX;
+    headers.forEach((h, i) => {
+      doc.rect(x, tableTop, colWidths[i], 18).fill('#0078d4');
+      doc.fill('#ffffff').text(h, x + 4, tableTop + 4, { width: colWidths[i] - 8, align: 'left' });
+      x += colWidths[i];
+    });
+
+    let y = tableTop + 18;
+    doc.font('Helvetica').fontSize(8);
+    rows.forEach((row, ri) => {
+      x = startX;
+      const bg = ri % 2 === 0 ? '#f5f5f5' : '#ffffff';
+      row.forEach((cell, ci) => {
+        doc.rect(x, y, colWidths[ci], 16).fill(bg);
+        doc.fill('#1a1a1a').text(cell, x + 4, y + 3, { width: colWidths[ci] - 8, align: 'left' });
+        x += colWidths[ci];
+      });
+      y += 16;
+
+      if (y > 560) {
+        doc.addPage();
+        y = 30;
+      }
+    });
+
+    doc.end();
+  });
 });

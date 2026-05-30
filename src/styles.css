@@ -446,3 +446,67 @@ td input[type="number"]:focus {
   display: flex;
   gap: 4px;
 }
+
+.cell-text {
+  padding: 5px 8px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  cursor: default;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.cell-text:hover {
+  background: #f0f0f0;
+  border-color: var(--border-light);
+}
+
+.cell-text.editable {
+  cursor: text;
+}
+
+.name-cell {
+  position: relative;
+}
+
+.name-cell .cell-text {
+  cursor: pointer;
+}
+
+.cell-editing {
+  padding: 5px 8px;
+  border: 1px solid var(--accent) !important;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: var(--font);
+  outline: none;
+  background: white;
+  box-shadow: 0 0 0 1px var(--accent);
+  width: 100%;
+}
+
+.img-tooltip {
+  display: none;
+  position: fixed;
+  z-index: 5000;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  padding: 4px;
+  pointer-events: none;
+}
+
+.img-tooltip.visible {
+  display: block;
+}
+
+.img-tooltip img {
+  display: block;
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 4px;
+  object-fit: contain;
+}

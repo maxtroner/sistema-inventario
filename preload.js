@@ -14,5 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateDownloaded: (callback) => ipcRenderer.on('update:downloaded', () => callback()),
   checkForUpdates: () => ipcRenderer.invoke('update:check'),
   downloadUpdate: () => ipcRenderer.invoke('update:download'),
-  installUpdate: () => ipcRenderer.invoke('update:install')
+  installUpdate: () => ipcRenderer.invoke('update:install'),
+  generatePdf: (data) => ipcRenderer.invoke('pdf:generate', data),
+  saveFile: (buffer, defaultName) => ipcRenderer.invoke('dialog:saveFile', buffer, defaultName)
 });

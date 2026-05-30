@@ -12,6 +12,10 @@ const editQuantity = document.getElementById('editQuantity');
 const imagePreview = document.getElementById('imagePreview');
 const imagePlaceholder = document.getElementById('imagePlaceholder');
 const imageUploadArea = document.getElementById('imageUploadArea');
+const imgTooltip = document.getElementById('imgTooltip');
+const tooltipImage = document.getElementById('tooltipImage');
+
+let tooltipHideTimeout = null;
 
 async function loadProducts() {
   products = await window.electronAPI.getProducts();
@@ -41,11 +45,11 @@ function renderTable() {
 
   tbody.innerHTML = filtered.map(p => `
     <tr data-id="${p.id}">
-      <td>
-        <input type="text" class="cell-input" data-field="code" value="${escapeHtml(p.code)}">
+      <td class="cell-code">
+        <span class="cell-text" data-field="code">${escapeHtml(p.code)}</span>
       </td>
-      <td>
-        <input type="text" class="cell-input" data-field="name" value="${escapeHtml(p.name)}">
+      <td class="name-cell">
+        <span class="cell-text name-text" data-field="name" data-image="${escapeHtml(p.image_path || '')}">${escapeHtml(p.name)}</span>
       </td>
       <td>
         <div class="image-cell">
@@ -57,7 +61,7 @@ function renderTable() {
         </div>
       </td>
       <td>
-        <input type="number" class="cell-input qty-display" data-field="quantity" value="${p.quantity}" min="0" style="font-weight:600;width:80px">
+        <span class="cell-text" data-field="quantity">${p.quantity}</span>
       </td>
       <td>
         <div class="qty-control">
@@ -67,13 +71,13 @@ function renderTable() {
       </td>
       <td>
         <div class="actions-cell">
+          <button class="btn-icon" onclick="editProduct(${p.id})" title="Editar">✏️</button>
           <button class="btn-icon danger" onclick="deleteProduct(${p.id})" title="Eliminar">🗑</button>
         </div>
       </td>
     </tr>
   `).join('');
 
-  attachCellListeners();
   resolveImages();
 }
 
@@ -86,39 +90,127 @@ async function resolveImages() {
   }
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+tbody.addEventListener('dblclick', (e) => {
+  const span = e.target.closest('.cell-text[data-field]');
+  if (!span) return;
+  const field = span.dataset.field;
+  const tr = span.closest('tr');
+  const id = parseInt(tr.dataset.id);
+  const product = products.find(p => p.id === id);
+  if (!product) return;
+
+  const currentValue = product[field];
+  const isNumber = field === 'quantity';
+
+  const input = document.createElement('input');
+  input.type = isNumber ? 'number' : 'text';
+  input.value = currentValue;
+  input.className = 'cell-editing';
+  input.dataset.field = field;
+  if (isNumber) { input.min = 0; input.style.width = '80px'; }
+
+  const onFinish = () => {
+    const newValue = isNumber ? (parseInt(input.value) || 0) : input.value;
+    if (String(newValue) === String(currentValue)) {
+      const span2 = document.createElement('span');
+      span2.className = `cell-text${field === 'name' ? ' name-text' : ''}`;
+      span2.dataset.field = field;
+      if (field === 'name') span2.dataset.image = product.image_path || '';
+      span2.textContent = currentValue;
+      input.replaceWith(span2);
+      return;
+    }
+
+    const updated = { ...product, [field]: newValue };
+    window.electronAPI.updateProduct(updated).then(() => {
+      product[field] = newValue;
+      const span2 = document.createElement('span');
+      span2.className = `cell-text${field === 'name' ? ' name-text' : ''}`;
+      span2.dataset.field = field;
+      if (field === 'name') span2.dataset.image = product.image_path || '';
+      span2.textContent = newValue;
+      input.replaceWith(span2);
+      showToast('Producto actualizado');
+    }).catch(() => {
+      const span2 = document.createElement('span');
+      span2.className = `cell-text${field === 'name' ? ' name-text' : ''}`;
+      span2.dataset.field = field;
+      if (field === 'name') span2.dataset.image = product.image_path || '';
+      span2.textContent = currentValue;
+      input.replaceWith(span2);
+      showToast('Error al actualizar', true);
+    });
+  };
+
+  span.replaceWith(input);
+  input.focus();
+  input.select();
+
+  input.addEventListener('blur', onFinish);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { input.blur(); }
+    if (e.key === 'Escape') {
+      input.removeEventListener('blur', onFinish);
+      const span2 = document.createElement('span');
+      span2.className = `cell-text${field === 'name' ? ' name-text' : ''}`;
+      span2.dataset.field = field;
+      if (field === 'name') span2.dataset.image = product.image_path || '';
+      span2.textContent = currentValue;
+      input.replaceWith(span2);
+    }
+  });
+});
+
+tbody.addEventListener('mouseenter', (e) => {
+  const span = e.target.closest('.name-text[data-image]');
+  if (!span || !span.dataset.image) return;
+  clearTimeout(tooltipHideTimeout);
+  showTooltip(span, span.dataset.image);
+}, true);
+
+tbody.addEventListener('mousemove', (e) => {
+  const span = e.target.closest('.name-text[data-image]');
+  if (!span || !span.dataset.image || !imgTooltip.classList.contains('visible')) return;
+  positionTooltip(e.target);
+});
+
+tbody.addEventListener('mouseleave', (e) => {
+  const span = e.target.closest('.name-text');
+  if (!span) { hideTooltip(); return; }
+  const related = e.relatedTarget;
+  if (related && span.contains(related)) return;
+  hideTooltip();
+}, true);
+
+async function showTooltip(span, imagePath) {
+  if (imagePath) {
+    const fullPath = await window.electronAPI.resolveImagePath(imagePath);
+    tooltipImage.src = `file:///${fullPath}`;
+    imgTooltip.classList.add('visible');
+    positionTooltip(span);
+  }
 }
 
-function attachCellListeners() {
-  document.querySelectorAll('.cell-input').forEach(input => {
-    let timeout;
-    input.addEventListener('change', async () => {
-      clearTimeout(timeout);
-      const tr = input.closest('tr');
-      const id = parseInt(tr.dataset.id);
-      const field = input.dataset.field;
-      const value = input.type === 'number' ? (parseInt(input.value) || 0) : input.value;
+function positionTooltip(el) {
+  const rect = el.getBoundingClientRect();
+  let left = rect.right + 8;
+  let top = rect.top - 10;
+  if (left + 210 > window.innerWidth) left = rect.left - 210;
+  if (top < 0) top = rect.bottom + 10;
+  imgTooltip.style.left = left + 'px';
+  imgTooltip.style.top = top + 'px';
+}
 
-      const product = products.find(p => p.id === id);
-      if (!product) return;
+function hideTooltip() {
+  clearTimeout(tooltipHideTimeout);
+  tooltipHideTimeout = setTimeout(() => {
+    imgTooltip.classList.remove('visible');
+  }, 200);
+}
 
-      const oldValue = product[field];
-      if (String(value) === String(oldValue)) return;
-
-      const updated = { ...product, [field]: value };
-      try {
-        await window.electronAPI.updateProduct(updated);
-        product[field] = value;
-        showToast('Producto actualizado');
-      } catch (err) {
-        input.value = oldValue;
-        showToast('Error al actualizar', true);
-      }
-    });
-  });
+function editProduct(id) {
+  const product = products.find(p => p.id === id);
+  if (product) openModal(product);
 }
 
 async function uploadImage(id) {
@@ -260,7 +352,29 @@ document.getElementById('btnSaveProduct').addEventListener('click', async () => 
   }
 });
 
+document.getElementById('btnExportPdf').addEventListener('click', async () => {
+  if (products.length === 0) {
+    showToast('No hay productos para exportar', true);
+    return;
+  }
+  try {
+    showToast('Generando PDF...');
+    const buffer = await window.electronAPI.generatePdf({ products });
+    const saved = await window.electronAPI.saveFile(buffer, `inventario-${new Date().toISOString().slice(0, 10)}.pdf`);
+    if (saved) showToast('PDF exportado correctamente');
+  } catch (err) {
+    showToast('Error al exportar PDF', true);
+    console.error(err);
+  }
+});
+
 searchInput.addEventListener('input', renderTable);
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
 function showToast(message, isError = false) {
   const existing = document.querySelector('.toast');
