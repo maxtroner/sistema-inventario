@@ -62,11 +62,11 @@ function renderTable() {
           </button>` : ''}
         </div>
       </td>
-      <td class="align-middle"><span class="cell-text text-gray-300" data-field="unidad">${escapeHtml(p.unidad || '')}</span></td>
-      <td class="align-middle"><span class="cell-text text-gray-300" data-field="familia">${escapeHtml(p.familia || '')}</span></td>
+      <td class="align-middle"><span class="cell-text text-gray-300" data-field="unidad">${cleanText(p.unidad)}</span></td>
+      <td class="align-middle"><span class="cell-text text-gray-300" data-field="familia">${cleanText(p.familia)}</span></td>
       <td class="w-20 text-center align-middle"><span class="cell-text text-gray-300 font-medium" data-field="minima">${p.minima}</span></td>
       <td class="w-20 text-center align-middle"><span class="cell-text ${p.quantity >= 0 ? 'stock-ok' : 'stock-low'}" data-field="quantity">${p.quantity}</span></td>
-      <td class="w-24 text-center align-middle">
+      <td class="w-32 text-center align-middle no-truncate">
         <span class="${stockOk ? 'request-ok' : 'request-low'}">${requestText}</span>
       </td>
       <td class="w-16 text-center align-middle">
@@ -326,7 +326,6 @@ async function subtractProduct(id, btn) {
 }
 
 async function deleteProduct(id) {
-  if (!confirm('¿Eliminar este producto?')) return;
   try {
     await window.electronAPI.deleteProduct(id);
     products = products.filter(p => p.id !== id);
@@ -454,6 +453,11 @@ function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+function cleanText(val) {
+  const t = (val || '').trim();
+  return t === '--' ? '' : escapeHtml(t);
 }
 
 function showToast(message, isError = false) {
