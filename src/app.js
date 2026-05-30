@@ -393,4 +393,45 @@ function showToast(message, isError = false) {
   }, 2500);
 }
 
+const updateBanner = document.getElementById('updateBanner');
+const updateMessage = document.getElementById('updateMessage');
+const updateProgress = document.getElementById('updateProgress');
+const progressFill = document.getElementById('progressFill');
+
+window.electronAPI.onUpdateAvailable((info) => {
+  updateMessage.textContent = `📥 Nueva versión ${info.version} disponible`;
+  updateBanner.style.display = 'flex';
+});
+
+window.electronAPI.onUpdateProgress((p) => {
+  updateBanner.style.display = 'none';
+  updateProgress.style.display = 'flex';
+  progressFill.style.width = Math.round(p.percent) + '%';
+});
+
+window.electronAPI.onUpdateDownloaded(() => {
+  updateProgress.innerHTML = '<span>✅ Actualización descargada. Reiniciando...</span>';
+  setTimeout(() => window.electronAPI.installUpdate(), 1500);
+});
+
+document.getElementById('btnDownloadUpdate').addEventListener('click', () => {
+  window.electronAPI.downloadUpdate();
+  updateBanner.style.display = 'none';
+  updateProgress.style.display = 'flex';
+  progressFill.style.width = '0%';
+});
+
+document.getElementById('btnDismissUpdate').addEventListener('click', () => {
+  updateBanner.style.display = 'none';
+});
+
+document.getElementById('btnCheckUpdates').addEventListener('click', async () => {
+  try {
+    await window.electronAPI.checkForUpdates();
+    showToast('Buscando actualizaciones...');
+  } catch {
+    showToast('Error al buscar actualizaciones', true);
+  }
+});
+
 loadProducts();

@@ -13,6 +13,7 @@
       <h1>Sistema de Inventario</h1>
       <div class="header-actions">
         <button class="btn btn-secondary" id="btnExportPdf">📄 Exportar PDF</button>
+        <button class="btn btn-secondary" id="btnCheckUpdates">🔄 Buscar actualizaciones</button>
         <button class="btn btn-primary" id="btnAddProduct">+ Nuevo Producto</button>
         <div class="search-box">
           <input type="text" id="searchInput" placeholder="Buscar por código o nombre...">
@@ -36,6 +37,17 @@
         </tbody>
       </table>
     </div>
+  </div>
+
+  <div class="update-banner" id="updateBanner" style="display:none">
+    <span id="updateMessage">📥 Nueva versión disponible</span>
+    <button class="btn btn-primary" id="btnDownloadUpdate" style="padding:4px 12px;font-size:12px">Descargar</button>
+    <button class="btn-close" id="btnDismissUpdate" style="font-size:18px">&times;</button>
+  </div>
+
+  <div class="update-progress" id="updateProgress" style="display:none">
+    <span>Descargando actualización...</span>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
   </div>
 
   <div class="modal-overlay" id="modalOverlay">

@@ -487,6 +487,46 @@ td input[type="number"]:focus {
   width: 100%;
 }
 
+.update-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 24px;
+  background: #0078d4;
+  color: white;
+  font-size: 13px;
+}
+
+.update-banner .btn-close {
+  color: white;
+  margin-left: auto;
+}
+
+.update-progress {
+  padding: 8px 24px;
+  background: #f0f0f0;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background: #d0d0d0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
 .img-tooltip {
   display: none;
   position: fixed;
