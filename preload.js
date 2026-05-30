@@ -10,6 +10,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   copyImageToApp: (sourcePath) => ipcRenderer.invoke('image:copyToApp', sourcePath),
   resolveImagePath: (relativePath) => ipcRenderer.invoke('image:resolvePath', relativePath),
   onUpdateAvailable: (callback) => ipcRenderer.on('update:available', (_, info) => callback(info)),
+  onUpdateNotAvailable: (callback) => ipcRenderer.on('update:not-available', () => callback()),
+  onUpdateError: (callback) => ipcRenderer.on('update:error', (_, msg) => callback(msg)),
   onUpdateProgress: (callback) => ipcRenderer.on('update:progress', (_, p) => callback(p)),
   onUpdateDownloaded: (callback) => ipcRenderer.on('update:downloaded', () => callback()),
   checkForUpdates: () => ipcRenderer.invoke('update:check'),

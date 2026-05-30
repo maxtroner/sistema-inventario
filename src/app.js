@@ -444,6 +444,15 @@ const progressFill = document.getElementById('progressFill');
 window.electronAPI.onUpdateAvailable((info) => {
   updateMessage.textContent = `Nueva versión ${info.version} disponible`;
   updateBanner.classList.remove('hidden');
+  showToast(`Actualización ${info.version} disponible — haz clic en "Descargar"`);
+});
+
+window.electronAPI.onUpdateNotAvailable(() => {
+  showToast('Ya tienes la última versión');
+});
+
+window.electronAPI.onUpdateError((msg) => {
+  showToast('Error al buscar actualización: ' + msg, true);
 });
 
 window.electronAPI.onUpdateProgress((p) => {

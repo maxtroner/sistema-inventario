@@ -1,6 +1,6 @@
 {
   "name": "sistema-inventario",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Sistema de Inventario con interfaz tipo Excel",
   "main": "main.js",
   "author": "maxtroner",

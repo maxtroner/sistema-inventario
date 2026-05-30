@@ -17,6 +17,12 @@ try {
     }
   });
 
+  autoUpdater.on('update-not-available', () => {
+    if (mainWindow) {
+      mainWindow.webContents.send('update:not-available');
+    }
+  });
+
   autoUpdater.on('download-progress', (progress) => {
     if (mainWindow) {
       mainWindow.webContents.send('update:progress', progress);
@@ -26,6 +32,13 @@ try {
   autoUpdater.on('update-downloaded', () => {
     if (mainWindow) {
       mainWindow.webContents.send('update:downloaded');
+    }
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error('Update error:', err);
+    if (mainWindow) {
+      mainWindow.webContents.send('update:error', err.message || 'Error de conexión');
     }
   });
 
@@ -54,8 +67,16 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
+
+  function checkUpdate() {
+    if (updateChecker) {
+      updateChecker.checkForUpdates().catch(() => {});
+    }
+  }
+
   if (updateChecker) {
-    setTimeout(() => updateChecker.checkForUpdates(), 3000);
+    setTimeout(checkUpdate, 3000);
+    setInterval(checkUpdate, 30 * 60 * 1000);
   }
 });
 
