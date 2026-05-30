@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data: atom:; script-src 'self'; style-src 'self' 'unsafe-inline';">
+  <title>Sistema de Inventario</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>Sistema de Inventario</h1>
+      <div class="header-actions">
+        <button class="btn btn-primary" id="btnAddProduct">+ Nuevo Producto</button>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Buscar por código o nombre...">
+        </div>
+      </div>
+    </header>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px">Código</th>
+            <th style="width:200px">Nombre</th>
+            <th style="width:100px">Imagen</th>
+            <th style="width:100px">Cantidad Actual</th>
+            <th style="width:200px">Restar Cantidad</th>
+            <th style="width:100px">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="productsBody">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Nuevo Producto</h2>
+        <button class="btn-close" id="btnCloseModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="editCode">Código del Producto</label>
+          <input type="text" id="editCode" placeholder="Ej: PROD-001">
+        </div>
+        <div class="form-group">
+          <label for="editName">Nombre del Producto</label>
+          <input type="text" id="editName" placeholder="Ej: Laptop HP">
+        </div>
+        <div class="form-group">
+          <label>Imagen del Producto</label>
+          <div class="image-upload-area" id="imageUploadArea">
+            <img id="imagePreview" style="display:none">
+            <div class="image-placeholder" id="imagePlaceholder">
+              <span>+</span>
+              <p>Haz clic para seleccionar imagen</p>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="editQuantity">Cantidad Actual</label>
+          <input type="number" id="editQuantity" min="0" value="0" placeholder="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelModal">Cancelar</button>
+        <button class="btn btn-primary" id="btnSaveProduct">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
