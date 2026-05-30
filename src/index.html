@@ -16,8 +16,8 @@
   <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between gap-4 select-none">
     <h1 class="text-xl font-bold text-white tracking-tight whitespace-nowrap">Sistema de Inventario</h1>
 
-    <div class="relative flex-1 max-w-md">
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="relative flex items-center flex-1 max-w-md">
+      <svg class="absolute left-3 text-gray-400 pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
       <input type="text" id="searchInput" placeholder="Buscar artículos..." class="w-full bg-gray-700/60 text-gray-200 placeholder-gray-500 border border-gray-600 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
@@ -56,17 +56,17 @@
   <!-- Table -->
   <div class="flex-1 overflow-auto px-6 py-4">
     <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-xl">
-      <table class="w-full">
+      <table class="w-full table-fixed">
         <thead>
           <tr class="bg-blue-600 text-white text-xs font-semibold uppercase tracking-wider">
-            <th class="w-10 px-3 py-3 text-center">#</th>
-            <th class="px-3 py-3 text-left">Código <svg class="inline align-middle ml-1 opacity-60" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
-            <th class="px-3 py-3 text-left">Artículo <svg class="inline align-middle ml-1 opacity-60" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
-            <th class="w-20 px-3 py-3 text-left">Unidad <svg class="inline align-middle ml-1 opacity-60" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
-            <th class="px-3 py-3 text-left">Familia / Periodo <svg class="inline align-middle ml-1 opacity-60" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
+            <th class="w-12 px-3 py-3 text-center">#</th>
+            <th class="w-28 px-3 py-3 text-left">Código <svg class="inline align-middle ml-1 opacity-60" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
+            <th class="px-3 py-3 text-left">Artículo <svg class="inline align-middle ml-1 opacity-60" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
+            <th class="w-20 px-3 py-3 text-left">Unidad <svg class="inline align-middle ml-1 opacity-60" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
+            <th class="w-36 px-3 py-3 text-left">Familia / Periodo <svg class="inline align-middle ml-1 opacity-60" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></th>
             <th class="w-20 px-3 py-3 text-center">E. Mínima</th>
             <th class="w-20 px-3 py-3 text-center">Stock</th>
-            <th class="w-28 px-3 py-3 text-center">Solicitar</th>
+            <th class="w-24 px-3 py-3 text-center">Solicitar</th>
             <th class="w-16 px-3 py-3 text-center">Acciones</th>
           </tr>
         </thead>

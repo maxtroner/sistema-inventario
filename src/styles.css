@@ -5,7 +5,7 @@
 }
 
 body {
-  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
   background: #111827;
   color: #f3f4f6;
 }
@@ -44,12 +44,22 @@ td {
   padding: 10px 12px;
   border-bottom: 1px solid #374151;
   transition: background-color 0.1s;
+  vertical-align: middle;
+}
+
+table.table-fixed td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cell-text {
   cursor: pointer;
-  display: block;
+  display: inline-block;
   padding: 4px 0;
+  min-height: 28px;
+  line-height: 20px;
+  width: 100%;
 }
 
 .cell-text:hover {
@@ -66,11 +76,14 @@ td {
   border: 1px solid #3b82f6;
   border-radius: 6px;
   font-size: 13px;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', -apple-system, sans-serif;
   outline: none;
   background: #374151;
   color: #f3f4f6;
   width: 100%;
+  display: inline-block;
+  line-height: 20px;
+  min-height: 28px;
 }
 
 .actions-cell {
@@ -143,19 +156,13 @@ td {
   transition: opacity 0.3s;
 }
 
-.qty-control {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
 .subtract-input {
   width: 70px;
   padding: 4px 8px;
   border: 1px solid #4b5563;
   border-radius: 6px;
   font-size: 12px;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: 'Segoe UI', -apple-system, sans-serif;
   outline: none;
   background: #374151;
   color: #f3f4f6;

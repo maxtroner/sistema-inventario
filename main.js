@@ -76,7 +76,7 @@ app.whenReady().then(() => {
 
   if (updateChecker) {
     setTimeout(checkUpdate, 3000);
-    setInterval(checkUpdate, 30 * 60 * 1000);
+    setInterval(checkUpdate, 5 * 60 * 1000);
   }
 });
 

@@ -35,11 +35,9 @@ function renderTable() {
   if (filtered.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="px-6 py-12">
-          <div class="empty-state">
-            <p>${products.length === 0 ? 'No hay artículos registrados' : 'Sin resultados'}</p>
-            <p class="sub">${products.length === 0 ? 'Haz clic en "Agregar Producto" para comenzar' : 'Prueba con otros términos'}</p>
-          </div>
+        <td colspan="9" class="px-6 py-12 text-center text-gray-500">
+          <div>${products.length === 0 ? 'No hay artículos registrados' : 'Sin resultados'}</div>
+          <div class="text-xs text-gray-600 mt-1">${products.length === 0 ? 'Haz clic en "Agregar Producto" para comenzar' : 'Prueba con otros términos'}</div>
         </td>
       </tr>
     `;
@@ -51,9 +49,9 @@ function renderTable() {
     const requestText = stockOk ? 'SUFICIENTE' : 'SOLICITAR';
     return `
     <tr data-id="${p.id}">
-      <td class="w-10 text-center"><span class="row-number">${i + 1}</span></td>
-      <td><span class="cell-text text-gray-300" data-field="code">${escapeHtml(p.code)}</span></td>
-      <td class="name-cell">
+      <td class="w-12 text-center align-middle"><span class="row-number">${i + 1}</span></td>
+      <td class="align-middle"><span class="cell-text text-gray-300" data-field="code">${escapeHtml(p.code)}</span></td>
+      <td class="name-cell align-middle">
         <span class="cell-text text-gray-100 font-medium name-text" data-field="name" data-image="${escapeHtml(p.image_path || '')}">${escapeHtml(p.name)}</span>
         <div class="flex gap-1 mt-1">
           <button class="btn-action" onclick="subtractProduct(${p.id}, this)" title="Restar stock">
@@ -64,14 +62,14 @@ function renderTable() {
           </button>` : ''}
         </div>
       </td>
-      <td><span class="cell-text text-gray-300" data-field="unidad">${escapeHtml(p.unidad || '')}</span></td>
-      <td><span class="cell-text text-gray-300" data-field="familia">${escapeHtml(p.familia || '')}</span></td>
-      <td class="text-center"><span class="cell-text text-gray-300 font-medium" data-field="minima">${p.minima}</span></td>
-      <td class="text-center"><span class="cell-text ${p.quantity >= 0 ? 'stock-ok' : 'stock-low'}" data-field="quantity">${p.quantity}</span></td>
-      <td class="text-center">
+      <td class="align-middle"><span class="cell-text text-gray-300" data-field="unidad">${escapeHtml(p.unidad || '')}</span></td>
+      <td class="align-middle"><span class="cell-text text-gray-300" data-field="familia">${escapeHtml(p.familia || '')}</span></td>
+      <td class="w-20 text-center align-middle"><span class="cell-text text-gray-300 font-medium" data-field="minima">${p.minima}</span></td>
+      <td class="w-20 text-center align-middle"><span class="cell-text ${p.quantity >= 0 ? 'stock-ok' : 'stock-low'}" data-field="quantity">${p.quantity}</span></td>
+      <td class="w-24 text-center align-middle">
         <span class="${stockOk ? 'request-ok' : 'request-low'}">${requestText}</span>
       </td>
-      <td>
+      <td class="w-16 text-center align-middle">
         <div class="actions-cell">
           <button class="btn-action edit" onclick="openEditModal(${p.id})" title="Editar">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -104,9 +102,69 @@ function getProductFromRow(tr) {
   return products.find(p => p.id === id);
 }
 
-tbody.addEventListener('dblclick', (e) => {
-  const span = e.target.closest('.cell-text[data-field]');
-  if (!span) return;
+// Single click to edit with auto-save
+let currentEditingInput = null;
+
+function cancelEditing(input) {
+  if (!input) return;
+  const span = document.createElement('span');
+  const field = input.dataset.field;
+  const originalValue = input.dataset.original;
+  const productId = parseInt(input.dataset.productId);
+  const product = products.find(p => p.id === productId);
+  if (!product) { input.replaceWith(document.createElement('span')); return; }
+  span.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
+  span.dataset.field = field;
+  if (field === 'name') span.dataset.image = product.image_path || '';
+  span.textContent = originalValue;
+  input.replaceWith(span);
+  if (currentEditingInput === input) currentEditingInput = null;
+}
+
+function finishEditing(input) {
+  if (!input) return;
+  const field = input.dataset.field;
+  const originalValue = input.dataset.original;
+  const productId = parseInt(input.dataset.productId);
+  const product = products.find(p => p.id === productId);
+  if (!product) { cancelEditing(input); return; }
+
+  const isNumber = field === 'quantity' || field === 'minima';
+  const newValue = isNumber ? (parseInt(input.value) || 0) : input.value;
+
+  if (String(newValue) === String(originalValue)) {
+    const span = document.createElement('span');
+    span.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
+    span.dataset.field = field;
+    if (field === 'name') span.dataset.image = product.image_path || '';
+    span.textContent = originalValue;
+    input.replaceWith(span);
+    if (currentEditingInput === input) currentEditingInput = null;
+    return;
+  }
+
+  const updated = { ...product, [field]: newValue };
+  window.electronAPI.updateProduct(updated).then(() => {
+    product[field] = newValue;
+    const span = document.createElement('span');
+    span.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
+    span.dataset.field = field;
+    if (field === 'name') span.dataset.image = product.image_path || '';
+    span.textContent = newValue;
+    input.replaceWith(span);
+    if (currentEditingInput === input) currentEditingInput = null;
+    renderTable();
+  }).catch(() => {
+    showToast('Error al actualizar', true);
+    cancelEditing(input);
+  });
+}
+
+function startEditing(span) {
+  if (currentEditingInput) {
+    finishEditing(currentEditingInput);
+  }
+
   const field = span.dataset.field;
   const tr = span.closest('tr');
   const product = getProductFromRow(tr);
@@ -120,58 +178,27 @@ tbody.addEventListener('dblclick', (e) => {
   input.value = currentValue;
   input.className = 'cell-editing';
   input.dataset.field = field;
+  input.dataset.original = currentValue;
+  input.dataset.productId = product.id;
   if (isNumber) { input.min = 0; input.style.width = '80px'; }
-
-  const onFinish = () => {
-    const newValue = isNumber ? (parseInt(input.value) || 0) : input.value;
-    if (String(newValue) === String(currentValue)) {
-      const span2 = document.createElement('span');
-      span2.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
-      span2.dataset.field = field;
-      if (field === 'name') span2.dataset.image = product.image_path || '';
-      span2.textContent = currentValue;
-      input.replaceWith(span2);
-      return;
-    }
-
-    const updated = { ...product, [field]: newValue };
-    window.electronAPI.updateProduct(updated).then(() => {
-      product[field] = newValue;
-      const span2 = document.createElement('span');
-      span2.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
-      span2.dataset.field = field;
-      if (field === 'name') span2.dataset.image = product.image_path || '';
-      span2.textContent = newValue;
-      input.replaceWith(span2);
-      renderTable();
-    }).catch(() => {
-      const span2 = document.createElement('span');
-      span2.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
-      span2.dataset.field = field;
-      if (field === 'name') span2.dataset.image = product.image_path || '';
-      span2.textContent = currentValue;
-      input.replaceWith(span2);
-      showToast('Error al actualizar', true);
-    });
-  };
 
   span.replaceWith(input);
   input.focus();
   input.select();
+  currentEditingInput = input;
 
-  input.addEventListener('blur', onFinish);
+  input.addEventListener('blur', () => finishEditing(input));
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') input.blur();
-    if (e.key === 'Escape') {
-      input.removeEventListener('blur', onFinish);
-      const span2 = document.createElement('span');
-      span2.className = `cell-text ${field === 'name' ? 'text-gray-100 font-medium name-text' : 'text-gray-300'}`;
-      span2.dataset.field = field;
-      if (field === 'name') span2.dataset.image = product.image_path || '';
-      span2.textContent = currentValue;
-      input.replaceWith(span2);
-    }
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { cancelEditing(input); }
   });
+}
+
+tbody.addEventListener('click', (e) => {
+  const span = e.target.closest('.cell-text[data-field]');
+  if (!span) return;
+  if (e.target.closest('.btn-action')) return;
+  startEditing(span);
 });
 
 tbody.addEventListener('mouseenter', (e) => {
@@ -294,7 +321,7 @@ async function subtractProduct(id, btn) {
   confirmBtn.addEventListener('click', doSubtract);
   qtyInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') doSubtract();
-    if (e.key === 'Escape') { parent.innerHTML = origHTML; }
+    if (e.key === 'Escape') parent.innerHTML = origHTML;
   });
 }
 
@@ -355,7 +382,7 @@ document.getElementById('btnAddProduct').addEventListener('click', () => openMod
 document.getElementById('btnCloseModal').addEventListener('click', closeModal);
 document.getElementById('btnCancelModal').addEventListener('click', closeModal);
 
-document.getElementById('btnSaveProduct').addEventListener('click', async () => {
+document.getElementById('btnSaveProduct').addEventListener('click', async (e) => {
   const code = editCode.value.trim();
   const name = editName.value.trim();
   const unidad = editUnidad.value.trim();
@@ -370,7 +397,12 @@ document.getElementById('btnSaveProduct').addEventListener('click', async () => 
 
   let imagePath = null;
   if (selectedImagePath) {
-    imagePath = await window.electronAPI.copyImageToApp(selectedImagePath);
+    try {
+      imagePath = await window.electronAPI.copyImageToApp(selectedImagePath);
+    } catch {
+      showToast('Error al copiar imagen', true);
+      return;
+    }
   } else if (editingId) {
     const product = products.find(p => p.id === editingId);
     imagePath = product ? product.image_path : null;
@@ -379,6 +411,7 @@ document.getElementById('btnSaveProduct').addEventListener('click', async () => 
   try {
     if (editingId) {
       const product = products.find(p => p.id === editingId);
+      if (!product) { showToast('Producto no encontrado', true); return; }
       const updated = { id: editingId, code, name, image_path: imagePath, quantity, unidad, familia, minima };
       await window.electronAPI.updateProduct(updated);
       Object.assign(product, updated);
@@ -391,10 +424,11 @@ document.getElementById('btnSaveProduct').addEventListener('click', async () => 
     closeModal();
     renderTable();
   } catch (err) {
-    if (err.message && err.message.includes('UNIQUE')) {
+    const msg = err && err.message ? err.message : String(err);
+    if (msg.includes('UNIQUE')) {
       showToast('El código ya existe', true);
     } else {
-      showToast('Error al guardar', true);
+      showToast('Error al guardar: ' + msg, true);
     }
   }
 });
@@ -444,7 +478,7 @@ const progressFill = document.getElementById('progressFill');
 window.electronAPI.onUpdateAvailable((info) => {
   updateMessage.textContent = `Nueva versión ${info.version} disponible`;
   updateBanner.classList.remove('hidden');
-  showToast(`Actualización ${info.version} disponible — haz clic en "Descargar"`);
+  showToast(`Actualización ${info.version} disponible`);
 });
 
 window.electronAPI.onUpdateNotAvailable(() => {
